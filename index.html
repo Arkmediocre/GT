@@ -6,17 +6,17 @@
     <meta name="theme-color" content="#11101d" />
     <meta
       name="description"
-      content="Dodge the devil's traps, master 100 platforming levels, and make it to the exit."
+      content="Play GT: dodge traps, collect coins, and master 100 platforming levels."
     />
-    <title>Level Devil — 100 trap-filled levels</title>
-    <link rel="stylesheet" href="style.css?v=4" />
+    <title>GT — 100 trap-filled levels</title>
+    <link rel="stylesheet" href="style.css?v=7" />
   </head>
   <body>
     <main class="app">
       <header class="topbar">
-        <a class="brand" href="#" aria-label="Level Devil home">
-          <span class="brand-mark" aria-hidden="true">!</span>
-          <span>LEVEL<span class="brand-light">DEVIL</span></span>
+        <a class="brand" href="#" aria-label="GT home">
+          <span class="brand-mark" aria-hidden="true">G</span>
+          <span>GT</span>
         </a>
         <div class="topbar-note"><span class="live-dot"></span> 100 ways to get fooled</div>
       </header>
@@ -26,6 +26,7 @@
           <p class="eyebrow">A tiny platform game with a big attitude</p>
           <h1>One more level.<br /><span>One more trap.</span></h1>
           <p class="intro-copy">Run, jump, and try not to trust the floor. Your progress saves automatically.</p>
+          <a class="intro-play-button" href="#gameScreen">PLAY THE GAME <span aria-hidden="true">↓</span></a>
         </div>
         <div class="intro-badge" aria-label="100 levels">
           <span>100</span>
@@ -33,7 +34,7 @@
         </div>
       </section>
 
-      <section class="game-layout" aria-label="Game">
+      <section class="game-layout" id="gameScreen" aria-label="Game">
         <div class="game-panel">
           <div class="game-toolbar">
             <div>
@@ -42,7 +43,7 @@
             </div>
             <div class="toolbar-actions">
               <a class="level-select-link" id="levelSelectLink" href="level-select.html">LEVELS</a>
-              <button class="ai-button" id="aiButton" type="button" aria-pressed="false" aria-label="Start AI pilot">AI <span>PILOT</span></button>
+              <button class="ai-button" id="aiButton" data-ai-toggle type="button" aria-pressed="false" aria-label="Start AI pilot">AI <span>PILOT</span></button>
               <div class="coin-wallet" aria-label="Coins collected">
                 <span aria-hidden="true">●</span>
                 <strong id="coinCount">0</strong>
@@ -65,12 +66,22 @@
           </div>
 
           <div class="stage-wrap" id="stageWrap">
-            <canvas id="game" width="960" height="540" aria-label="Level Devil platform game"></canvas>
+            <canvas id="game" width="960" height="540" aria-label="GT platform game"></canvas>
+            <a class="level-select-link stage-level-select-link" id="stageLevelSelectLink" href="level-select.html?level=1" aria-label="Choose a level">LEVELS</a>
             <button class="icon-button stage-fullscreen-button" id="stageFullscreenButton" type="button" aria-label="Exit fullscreen" title="Exit fullscreen">↙</button>
-            <div class="stage-message" id="stageMessage" aria-live="polite">
-              <span class="message-dot"></span>
-              <span id="status"></span>
+            <div class="stage-mobile-controls" aria-label="Expanded-screen touch controls">
+              <div class="mobile-direction-controls">
+                <button class="mobile-control-button" data-control="left" type="button" aria-label="Move left">←</button>
+                <button class="mobile-control-button" data-control="right" type="button" aria-label="Move right">→</button>
+              </div>
+              <button class="mobile-control-button mobile-jump-button" data-control="jump" type="button" aria-label="Jump">JUMP</button>
+              <button class="ai-button stage-ai-button" data-ai-toggle type="button" aria-pressed="false" aria-label="Start AI pilot">AI <span>PILOT</span></button>
             </div>
+          </div>
+
+          <div class="stage-message is-hidden" id="stageMessage" aria-live="polite">
+            <span class="message-dot"></span>
+            <span id="status"></span>
           </div>
 
           <div class="mobile-controls" aria-label="Touch controls">
@@ -118,7 +129,7 @@
 
       <footer class="page-footer">MADE FOR THE BRAVE <span>·</span> NOT RESPONSIBLE FOR RAGE QUITS</footer>
     </main>
-    <script src="game.js?v=7"></script>
-    <script type="module" src="leaderboard.js?v=4"></script>
+    <script src="game.js?v=11"></script>
+    <script type="module" src="leaderboard.js?v=6"></script>
   </body>
 </html>

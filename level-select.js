@@ -18,7 +18,7 @@ function getUnlockedLevel() {
     const previousSave = Number(localStorage.getItem('level-devil-progress-v2'));
     return Number.isInteger(previousSave) ? Math.max(1, Math.min(maximumLevel, previousSave)) : 1;
   } catch (error) {
-    console.warn('Could not read saved Level Devil progress.', error);
+    console.warn('Could not read saved GT progress.', error);
     return 1;
   }
 }

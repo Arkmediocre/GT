@@ -1,13 +1,13 @@
-# Level Devil
+# GT
 
 A no-install, browser-based platform game with 100 progressively harder levels.
 
 ## Play locally
 
-Start the Python game server from this folder:
+Run a static web server from this folder:
 
 ```powershell
-python server.py
+py -m http.server 8000
 ```
 
 Then visit <http://localhost:8000>.
@@ -21,19 +21,21 @@ Then visit <http://localhost:8000>.
 - Choose an unlocked level: click **Levels** beside the game controls
 
 AI Pilot uses the Python hazard planner when the backend is running and falls
-back to the browser's built-in hazard-aware pilot otherwise. The pilot remains
-active after a trap, retries the level automatically, and broadens its hazard
-look-ahead after AI deaths; a trap can still defeat an individual attempt.
+back to the browser's built-in hazard-aware pilot otherwise. It collects every
+level coin as it advances, retries automatically after a trap, and engages a
+safety net after its first failed attempt so it can finish without repeated
+resets.
 
-Each of the 100 levels has a level-specific variation of its nature palette
-and an original procedural melody. Start the music with the **♫** button;
-browsers require a tap before audio can play. On phones, use the rotate button
+Each of the 100 levels has its own distinct background palette and an original
+procedural melody. The game also plays sound effects for jumps, coins, traps,
+and level clears. Start the music with the **♫** button; browsers require a tap
+before audio can play. On phones, use the rotate button
 to request landscape orientation (browser and device support may be required).
 
 The game automatically adapts its layout to desktop and mobile screens. On
-phones, large multitouch controls appear below the game; on desktop, use the
-keyboard. The touch controls also stop AI Pilot when you press a movement
-button, so you can take control immediately.
+phones, touch controls appear below the game; when the screen is enlarged or
+fullscreen, movement, jump, AI, and level-selection buttons remain available
+beside the playfield. Press a movement button to take control back from AI.
 
 Use the **Size** slider above the game to resize the play screen from 70% to
 150%; the selected size is saved in that browser. Use the fullscreen button
@@ -41,32 +43,17 @@ for a larger view, then use the exit button or `Escape` to return. On browsers
 without native fullscreen support, the game opens in an in-page fullscreen
 view instead. When enlarged on a small screen, swipe across the game to pan.
 
-To play on a phone or tablet on the same Wi-Fi as the computer running
-`server.py`, open `http://<computer-LAN-IP>:8000` on the device. Find the
-computer's IPv4 address with `ipconfig`; allow Python through the computer's
-private-network firewall if prompted. For a public link that works outside
-your Wi-Fi, deploy the static game with GitHub Pages below; the built-in
-browser AI still works there.
+To play on a phone or tablet on the same Wi-Fi, open
+`http://<computer-LAN-IP>:8000` on the device. Find the computer's IPv4 address
+with `ipconfig`; allow Python through the computer's private-network firewall
+if prompted. For a public link that works outside your Wi-Fi, deploy the
+static game with GitHub Pages below.
 
 Collect gold coins along the route. Coin totals and unlocked levels save in the
 browser. Levels introduce new hazards as you progress: floor pits, fake exits,
 exposed platform gaps, and crumbling ledges. The game now has a moving,
 flower-filled countryside backdrop and an animated trail-going adventurer who
 walks into the exit and disappears before the level-clear screen appears.
-
-## Python game backend
-
-`server.py` uses only the Python standard library. It serves the game and adds:
-
-- A hazard-aware `/api/agent/decision` endpoint used by AI Pilot to request
-  movement and jump decisions. If the Python server is unavailable, the
-  browser falls back to its built-in pilot.
-- A persistent SQLite score board at `/api/leaderboard`, showing the best
-  coin count and completion time for players using this server.
-
-The Python score board is for this server, not automatically worldwide. To
-share scores across the public internet, deploy the Python service and connect
-Firebase using the steps below.
 
 ## Enable the worldwide leaderboard
 
@@ -86,18 +73,19 @@ Firebase project:
 5. Serve or deploy the game over HTTPS, then finish a level to see its scores.
 
 Until a Firebase project is configured, the game displays a setup message rather
-than presenting sample results as worldwide scores. Firebase Web app config is
-public client configuration; never put a service-account key in this project.
+than presenting sample results as worldwide scores. The AI pilot runs in the
+browser without a backend. Firebase Web app config is public client
+configuration; never put a service-account key in this project.
 
 ## Publish with GitHub Pages
 
-The workflow in `.github/workflows/deploy-pages.yml` deploys this folder on
+The workflow in `.github/workflows/pages.yml` deploys this folder on
 every push to the repository's `main` branch. To publish it:
 
 1. Create a GitHub repository and add the contents of this folder to its root.
 2. In the repository, open **Settings → Pages** and select **GitHub Actions** as
    the build and deployment source.
-3. Push the files to `main`, or run **Deploy Level Devil to GitHub Pages** from
+3. Push the files to `main`, or run **Deploy GT to GitHub Pages** from
    the **Actions** tab.
 
 The published address appears on the workflow run and in **Settings → Pages**.

@@ -78,54 +78,11 @@ function appendLeaderboardRows(records, userId) {
     });
 }
 
-function getLocalPlayerId() {
-  const key = 'level-devil-player-id';
-  let playerId = localStorage.getItem(key);
-  if (!playerId) {
-    playerId = typeof crypto.randomUUID === 'function'
-      ? crypto.randomUUID().replaceAll('-', '')
-      : Array.from(crypto.getRandomValues(new Uint8Array(16)), (byte) => byte.toString(16).padStart(2, '0')).join('');
-    localStorage.setItem(key, playerId);
-  }
-  return playerId;
-}
-
-async function submitToPythonLeaderboard({ level, score, durationMs }) {
-  const playerId = getLocalPlayerId();
-  const submission = await fetch('/api/leaderboard', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      level,
-      score,
-      duration_ms: durationMs,
-      player_id: playerId,
-    }),
-  });
-  if (submission.status === 404 || submission.status === 501) return false;
-  if (!submission.ok) throw new Error(`Python leaderboard returned HTTP ${submission.status}.`);
-
-  const response = await fetch(`/api/leaderboard?level=${encodeURIComponent(level)}`);
-  if (!response.ok) throw new Error(`Could not load server scores (HTTP ${response.status}).`);
-  const result = await response.json();
-  document.querySelector('#leaderboardScope').textContent = 'THIS SERVER · TOP SCORES';
-  title.textContent = `Level ${String(level).padStart(2, '0')} · SERVER TOP SCORES`;
-  appendLeaderboardRows(result.scores, playerId);
-  return true;
-}
-
 async function submitAndShowLeaderboard({ level, score, durationMs }) {
   showPanel(level, score);
   document.querySelector('#leaderboardScope').textContent = 'WORLDWIDE TOP SCORES';
   if (!isConfigured()) {
-    try {
-      const savedOnServer = await submitToPythonLeaderboard({ level, score, durationMs });
-      if (savedOnServer) return;
-      status.textContent = 'Start server.py for server scores, or connect Firebase for a worldwide leaderboard.';
-    } catch (error) {
-      console.error('Could not submit to the Python server leaderboard.', error);
-      status.textContent = 'Could not save server scores. Check the Python server and try again.';
-    }
+    status.textContent = 'Connect Firebase to enable a worldwide leaderboard.';
     return;
   }
 
@@ -165,7 +122,7 @@ async function submitAndShowLeaderboard({ level, score, durationMs }) {
       status.textContent = 'Ranked by coins collected, then fastest time. Your best is already saved.';
     }
   } catch (error) {
-    console.error('Could not load the Level Devil worldwide leaderboard.', error);
+    console.error('Could not load the GT worldwide leaderboard.', error);
     status.textContent = 'Could not connect to scores. Check Firebase setup and your connection.';
   }
 }

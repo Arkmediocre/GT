@@ -148,6 +148,10 @@ h1 span {
   font-size: 0.9rem;
 }
 
+.intro-play-button {
+  display: none;
+}
+
 .intro-badge {
   display: grid;
   width: 100px;
@@ -374,6 +378,10 @@ h1 span {
   scrollbar-width: thin;
 }
 
+.stage-wrap.is-large-screen {
+  position: relative;
+}
+
 canvas {
   display: block;
   flex: 0 0 auto;
@@ -402,6 +410,23 @@ canvas {
 
 .stage-fullscreen-button {
   display: none;
+}
+
+.stage-level-select-link {
+  display: none;
+}
+
+.stage-wrap.is-large-screen .stage-level-select-link,
+.stage-wrap:fullscreen .stage-level-select-link,
+.stage-wrap.is-fullscreen .stage-level-select-link {
+  position: absolute;
+  z-index: 3;
+  top: max(12px, env(safe-area-inset-top));
+  left: max(12px, env(safe-area-inset-left));
+  display: inline-flex;
+  min-height: 40px;
+  background: rgba(34, 29, 48, 0.9);
+  backdrop-filter: blur(8px);
 }
 
 .stage-wrap:fullscreen .stage-fullscreen-button,
@@ -436,6 +461,10 @@ canvas {
   max-height: 100dvh;
 }
 
+.stage-mobile-controls {
+  display: none;
+}
+
 .game-fullscreen-fallback {
   overflow: hidden;
 }
@@ -465,13 +494,11 @@ canvas {
 }
 
 .stage-message {
-  position: absolute;
-  left: 13px;
-  bottom: 12px;
   display: flex;
   align-items: center;
   gap: 8px;
-  max-width: calc(100% - 26px);
+  max-width: 100%;
+  margin-top: 10px;
   padding: 8px 11px;
   border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 9px;
@@ -479,6 +506,10 @@ canvas {
   color: #e4e0eb;
   font-size: 0.72rem;
   backdrop-filter: blur(8px);
+}
+
+.stage-message.is-hidden {
+  display: none;
 }
 
 .mobile-controls {
@@ -928,6 +959,27 @@ canvas {
     font-size: 0.78rem;
   }
 
+  .intro-play-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 42px;
+    margin-top: 14px;
+    padding: 0 14px;
+    border: 1px solid rgba(255, 109, 145, 0.32);
+    border-radius: 10px;
+    background: rgba(255, 109, 145, 0.1);
+    color: #ff9ab1;
+    font-family: "DM Mono", Consolas, monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-decoration: none;
+  }
+
+  .intro-play-button span {
+    font-size: 1rem;
+  }
+
   .selector-intro {
     align-items: flex-start;
     padding: 27px 2px 20px;
@@ -991,7 +1043,7 @@ canvas {
 
 }
 
-@media (hover: none) and (pointer: coarse) {
+@media (max-width: 700px), (hover: none) and (pointer: coarse) {
   .mobile-only-button {
     display: grid !important;
   }
@@ -1006,6 +1058,74 @@ canvas {
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
+  }
+
+  .stage-wrap.is-large-screen .stage-mobile-controls,
+  .stage-wrap:fullscreen .stage-mobile-controls,
+  .stage-wrap.is-fullscreen .stage-mobile-controls {
+    position: absolute;
+    z-index: 2;
+    right: max(8px, env(safe-area-inset-right));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    left: max(8px, env(safe-area-inset-left));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 7px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 15px;
+    background: rgba(17, 16, 29, 0.82);
+    backdrop-filter: blur(8px);
+    touch-action: none;
+  }
+
+  .stage-mobile-controls .mobile-direction-controls {
+    gap: 5px;
+  }
+
+  .stage-mobile-controls .mobile-control-button {
+    width: clamp(40px, 12vw, 54px);
+    height: 42px;
+    border-radius: 11px;
+    font-size: 1.3rem;
+  }
+
+  .stage-mobile-controls .mobile-jump-button {
+    width: clamp(64px, 19vw, 82px);
+    font-size: 0.62rem;
+  }
+
+  .stage-mobile-controls .stage-ai-button {
+    min-height: 42px;
+    padding: 0 9px;
+    font-size: 0.62rem;
+  }
+
+  .stage-mobile-controls .stage-ai-button span {
+    display: inline;
+  }
+}
+
+@media (max-width: 700px), (hover: none) and (pointer: coarse) {
+  .stage-wrap:fullscreen,
+  .stage-wrap.is-fullscreen {
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .stage-wrap:fullscreen canvas,
+  .stage-wrap.is-fullscreen canvas {
+    grid-row: 1;
+    width: min(100vw, calc((100dvh - 76px) * 16 / 9));
+    max-height: calc(100dvh - 76px);
+  }
+
+  .stage-wrap:fullscreen .stage-mobile-controls,
+  .stage-wrap.is-fullscreen .stage-mobile-controls {
+    position: static;
+    grid-row: 2;
+    width: min(460px, calc(100vw - 16px));
+    margin: 0 8px max(8px, env(safe-area-inset-bottom));
   }
 }
 

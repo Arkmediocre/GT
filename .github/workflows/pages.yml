@@ -1,4 +1,4 @@
-name: Deploy Trapbound to GitHub Pages
+name: Deploy GT to GitHub Pages
 
 on:
   push:

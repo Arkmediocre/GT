@@ -99,7 +99,7 @@ function loadProgress() {
       collectedCoinIds: [],
     };
   } catch (error) {
-    console.warn('Could not read saved Level Devil progress.', error);
+    console.warn('Could not read saved GT progress.', error);
     return { highestUnlocked: 1, totalCoins: 0, collectedCoinIds: [] };
   }
 }
@@ -112,7 +112,7 @@ function saveProgress() {
       collectedCoinIds: [...collectedCoinIds],
     }));
   } catch (error) {
-    console.warn('Could not save Level Devil progress.', error);
+    console.warn('Could not save GT progress.', error);
     setStatus('Progress could not be saved in this browser.', 3);
   }
 }
@@ -272,6 +272,54 @@ function setStatus(message, duration = 2.5) {
   statusTimer = duration;
 }
 
+function unlockAudio() {
+  const AudioContextConstructor = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextConstructor) return;
+
+  try {
+    audioContext ??= new AudioContextConstructor();
+    if (audioContext.state === 'suspended') {
+      audioContext.resume().catch((error) => console.warn('Could not unlock game audio.', error));
+    }
+  } catch (error) {
+    console.warn('Could not initialize game audio.', error);
+  }
+}
+
+function playTone(frequency, { duration = 0.18, volume = 0.025, type = 'triangle', delay = 0 } = {}) {
+  if (!audioContext || audioContext.state !== 'running') return;
+
+  const start = audioContext.currentTime + delay;
+  const oscillator = audioContext.createOscillator();
+  const gain = audioContext.createGain();
+  oscillator.type = type;
+  oscillator.frequency.value = frequency;
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.exponentialRampToValueAtTime(volume, start + 0.018);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+  oscillator.connect(gain);
+  gain.connect(audioContext.destination);
+  oscillator.start(start);
+  oscillator.stop(start + duration + 0.02);
+}
+
+function playSoundEffect(effect) {
+  if (effect === 'coin') {
+    playTone(880, { duration: 0.12, volume: 0.045, type: 'sine' });
+    playTone(1320, { duration: 0.2, volume: 0.035, type: 'sine', delay: 0.07 });
+  } else if (effect === 'jump') {
+    playTone(330, { duration: 0.11, volume: 0.025, type: 'triangle' });
+    playTone(495, { duration: 0.09, volume: 0.015, type: 'sine', delay: 0.04 });
+  } else if (effect === 'trap') {
+    playTone(180, { duration: 0.19, volume: 0.04, type: 'triangle' });
+    playTone(120, { duration: 0.26, volume: 0.03, type: 'sawtooth', delay: 0.08 });
+  } else if (effect === 'clear') {
+    [523.25, 659.25, 783.99, 1046.5].forEach((frequency, index) => {
+      playTone(frequency, { duration: 0.42, volume: 0.025, type: 'sine', delay: index * 0.11 });
+    });
+  }
+}
+
 function updateMusicButton() {
   const label = musicEnabled ? 'Stop level music' : 'Start level music';
   musicButton.setAttribute('aria-label', label);
@@ -282,32 +330,31 @@ function updateMusicButton() {
 
 function scheduleLevelMusic() {
   if (!musicEnabled || !audioContext || audioContext.state !== 'running') return;
-  const scale = [0, 3, 5, 7, 10, 12, 10, 7];
-  const note = scale[musicNotes[musicStep % musicNotes.length]];
+  const scale = [0, 2, 4, 7, 9, 12, 14, 16];
+  const beat = musicStep % musicNotes.length;
+  const note = scale[musicNotes[beat]];
   const root = 174.61 * (2 ** ((currentLevel % 12) / 12));
-  const start = audioContext.currentTime;
-  const duration = 0.44;
-  const oscillator = audioContext.createOscillator();
-  const volume = audioContext.createGain();
-  oscillator.type = 'sine';
-  oscillator.frequency.value = root * (2 ** (note / 12));
-  volume.gain.setValueAtTime(0.0001, start);
-  volume.gain.exponentialRampToValueAtTime(0.035, start + 0.035);
-  volume.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-  oscillator.connect(volume);
-  volume.connect(audioContext.destination);
-  oscillator.start(start);
-  oscillator.stop(start + duration + 0.02);
+  playTone(root * (2 ** (note / 12)), { duration: 0.24, volume: 0.022, type: 'triangle' });
+  playTone(root * (2 ** ((note + 12) / 12)), { duration: 0.1, volume: 0.009, type: 'sine', delay: 0.025 });
+  if (beat % 4 === 0) {
+    playTone(root / 2, { duration: 1.1, volume: 0.014, type: 'sine' });
+    playTone(root * (2 ** (scale[musicNotes[(beat + 2) % musicNotes.length]] / 12)), {
+      duration: 0.9,
+      volume: 0.01,
+      type: 'sine',
+      delay: 0.04,
+    });
+  }
   musicStep += 1;
-  musicTimer = window.setTimeout(scheduleLevelMusic, 470 + (currentLevel % 7) * 28);
+  musicTimer = window.setTimeout(scheduleLevelMusic, 360 + (currentLevel % 5) * 20);
 }
 
 function selectLevelMusic() {
   if (musicTimer) window.clearTimeout(musicTimer);
   if (!musicEnabled) return;
   const random = randomForLevel(currentLevel + 137);
-  musicNotes = Array.from({ length: 8 }, (_, index) =>
-    (Math.floor(random() * 8) + index * (currentLevel % 8)) % 8);
+  const motif = Array.from({ length: 4 }, () => Math.floor(random() * 8));
+  musicNotes = [...motif, ...motif.slice().reverse()];
   musicStep = 0;
   scheduleLevelMusic();
 }
@@ -357,6 +404,7 @@ async function rotateForPhone() {
 function setScreenSize(size, persist = true) {
   const normalized = Math.max(70, Math.min(150, Math.round(Number(size) / 10) * 10));
   document.documentElement.style.setProperty('--game-screen-size', `${normalized}%`);
+  stageWrap.classList.toggle('is-large-screen', normalized > 100);
   screenSizeInput.value = String(normalized);
   screenSizeLabel.value = `${normalized}%`;
   if (persist) {
@@ -424,6 +472,7 @@ function updateProgressUI() {
   document.querySelector('#chapterName').style.color = chapter.hue;
   document.querySelector('#coinCount').textContent = String(totalCoins);
   document.querySelector('#levelSelectLink').href = `level-select.html?level=${currentLevel}`;
+  document.querySelector('#stageLevelSelectLink').href = `level-select.html?level=${currentLevel}`;
   updateAIPilotButton();
   levelTitle.innerHTML = `LEVEL ${String(currentLevel).padStart(2, '0')} <span>/ 100</span>`;
   levelProgress.style.width = `${(currentLevel / MAX_LEVEL) * 100}%`;
@@ -467,6 +516,22 @@ function startLevel(level) {
   selectLevelMusic();
 }
 
+function collectCoin(coin) {
+  if (coin.collected) return;
+  coin.collected = true;
+  collectedCoinIds.add(coin.id);
+  totalCoins += 1;
+  levelCoins += 1;
+  saveProgress();
+  document.querySelector('#coinCount').textContent = String(totalCoins);
+  playSoundEffect('coin');
+  if (aiPilot && map.coins.every((levelCoin) => levelCoin.collected)) {
+    setStatus('AI collected every coin on this level!', 2.4);
+  } else {
+    setStatus(`Coin collected! ${totalCoins} in your stash.`, 1.4);
+  }
+}
+
 function intersect(a, b) {
   return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 }
@@ -481,8 +546,13 @@ function hitSaw(saw, rect) {
 
 function die(message = 'Trap! Shake it off and go again.') {
   if (player.safeTime > 0 || won) return;
+  if (aiPilot && aiRetriesThisLevel > 0) {
+    rescueAIPilot();
+    return;
+  }
   deaths += 1;
   if (aiPilot) aiRetriesThisLevel += 1;
+  playSoundEffect('trap');
   player.x = 58;
   player.y = FLOOR_Y - player.h;
   player.vx = 0;
@@ -503,6 +573,43 @@ function die(message = 'Trap! Shake it off and go again.') {
   }
 }
 
+function rescueAIPilot() {
+  const nextPlatform = map.platforms
+    .filter((platform) =>
+      platform.kind !== 'ground'
+      && platform.state !== 'gone'
+      && platform.w >= player.w + 8
+      && platform.x > player.x + player.w / 2
+    )
+    .sort((a, b) => a.x - b.x)[0];
+  const finalPlatform = map.platforms
+    .filter((platform) => platform.kind === 'ground' && platform.x > player.x)
+    .sort((a, b) => a.x - b.x)[0];
+  const landing = nextPlatform ?? finalPlatform;
+
+  if (landing) {
+    player.x = landing.kind === 'ground'
+      ? landing.x + 8
+      : landing.x + Math.min(8, landing.w - player.w);
+    player.y = landing.y - player.h;
+    if (landing.kind === 'crumble') {
+      landing.state = 'solid';
+      landing.crumbleTimer = 0;
+      landing.resetTimer = 0;
+    }
+  } else {
+    player.x = map.exit.x - player.w - 4;
+    player.y = map.exit.y;
+  }
+
+  player.vx = 0;
+  player.vy = 0;
+  player.onGround = true;
+  player.safeTime = Number.POSITIVE_INFINITY;
+  cameraX = Math.max(0, Math.min(map.worldWidth - WIDTH, player.x - WIDTH * 0.42));
+  setStatus('AI safety net engaged. It will finish this level without another retry.', 2.4);
+}
+
 function completeLevel() {
   if (won || enteringDoor) return;
   enteringDoor = true;
@@ -518,6 +625,7 @@ function finishLevel() {
   enteringDoor = false;
   playerHidden = true;
   won = true;
+  playSoundEffect('clear');
   highestUnlocked = Math.max(highestUnlocked, Math.min(MAX_LEVEL, currentLevel + 1));
   saveProgress();
   updateProgressUI();
@@ -528,7 +636,7 @@ function finishLevel() {
       durationMs: Math.max(1, Math.round(performance.now() - levelStartedAt)),
     },
   }));
-  setStatus(currentLevel === MAX_LEVEL ? 'You beat all 100 levels. The devil is impressed.' : 'Exit found! Get ready for the next level.', 999);
+  setStatus(currentLevel === MAX_LEVEL ? 'You beat all 100 levels. GT is yours!' : 'Exit found! Get ready for the next level.', 999);
 }
 
 function movePlayer(dt) {
@@ -554,6 +662,7 @@ function movePlayer(dt) {
   if (input.jumpQueued && player.onGround) {
     player.vy = -JUMP_SPEED;
     player.onGround = false;
+    playSoundEffect('jump');
   }
   input.jumpQueued = false;
 
@@ -590,7 +699,8 @@ function movePlayer(dt) {
   }
 
   if (player.y > HEIGHT + 120) {
-    die();
+    if (aiPilot && aiRetriesThisLevel > 0) rescueAIPilot();
+    else die();
     return;
   }
 
@@ -618,13 +728,7 @@ function movePlayer(dt) {
 
   for (const coin of map.coins) {
     if (!coin.collected && intersect(body, { x: coin.x - 10, y: coin.y - 10, w: 20, h: 20 })) {
-      coin.collected = true;
-      collectedCoinIds.add(coin.id);
-      totalCoins += 1;
-      levelCoins += 1;
-      saveProgress();
-      document.querySelector('#coinCount').textContent = String(totalCoins);
-      setStatus(`Coin collected! ${totalCoins} in your stash.`, 1.4);
+      collectCoin(coin);
     }
   }
 
@@ -633,15 +737,17 @@ function movePlayer(dt) {
 }
 
 function updateAIPilotButton() {
-  const button = document.querySelector('#aiButton');
-  button.classList.toggle('is-active', aiPilot);
-  button.setAttribute('aria-pressed', String(aiPilot));
-  button.setAttribute('aria-label', aiPilot ? 'Stop AI pilot' : 'Start AI pilot');
+  for (const button of document.querySelectorAll('[data-ai-toggle]')) {
+    button.classList.toggle('is-active', aiPilot);
+    button.setAttribute('aria-pressed', String(aiPilot));
+    button.setAttribute('aria-label', aiPilot ? 'Stop AI pilot' : 'Start AI pilot');
+  }
 }
 
 function toggleAIPilot() {
   if (won || enteringDoor) return;
   aiPilot = !aiPilot;
+  if (!aiPilot && aiRetriesThisLevel > 0) player.safeTime = Math.min(player.safeTime, 0.75);
   aiServerJump = false;
   aiRequestCountdown = 0;
   input.left = false;
@@ -773,6 +879,19 @@ function updateAIPilot(dt) {
 
   input.left = false;
   input.right = true;
+  if (player.x > map.exit.x + map.exit.w) {
+    player.x = map.exit.x - player.w - 4;
+    player.y = map.exit.y + map.exit.h - player.h;
+    player.vx = 0;
+    player.vy = 0;
+    player.onGround = true;
+    player.safeTime = Math.max(player.safeTime, 0.2);
+    completeLevel();
+    return;
+  }
+  for (const coin of map.coins) {
+    if (!coin.collected && coin.x <= player.x + 120) collectCoin(coin);
+  }
   aiRequestCountdown -= dt;
   if (aiRequestCountdown <= 0 && !aiServerDisabled) {
     aiRequestCountdown = 0.18;
@@ -830,8 +949,10 @@ function updateWorld(dt) {
 function drawBackground() {
   const biomeIndex = Math.floor((currentLevel - 1) / 20);
   const levelVariation = (currentLevel - 1) % 20;
-  const levelHue = ((currentLevel - 1) * 11) % 360;
-  const floraHue = [126, 93, 157, 121, 109][biomeIndex] + levelVariation * 0.9;
+  const levelHue = ((currentLevel - 1) * 137.508) % 360;
+  const floraHue = [126, 93, 157, 121, 109][biomeIndex]
+    + levelVariation * 3.6
+    + (currentLevel * 29) % 53;
   const skyTop = `hsl(${levelHue}, 48%, 78%)`;
   const skyMiddle = `hsl(${levelHue + 16}, 47%, 86%)`;
   const skyLow = `hsl(${levelHue + 35}, 43%, 76%)`;
@@ -849,7 +970,7 @@ function drawBackground() {
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-  const sunX = WIDTH * 0.76 - cameraX * 0.035;
+  const sunX = WIDTH * (0.66 + (currentLevel % 7) * 0.035) - cameraX * 0.035;
   const sunGlow = ctx.createRadialGradient(sunX, 105, 8, sunX, 105, 95);
   sunGlow.addColorStop(0, 'rgba(255, 247, 190, 0.7)');
   sunGlow.addColorStop(1, 'rgba(255, 240, 176, 0)');
@@ -860,8 +981,8 @@ function drawBackground() {
   ctx.arc(sunX, 105, 31, 0, Math.PI * 2);
   ctx.fill();
 
-  for (let i = 0; i < 5; i += 1) {
-    const cloudX = ((i * 260 - cameraX * 0.1) % (WIDTH + 180) + WIDTH + 180) % (WIDTH + 180) - 50;
+  for (let i = 0; i < 3 + (currentLevel % 4); i += 1) {
+    const cloudX = ((i * (180 + (currentLevel % 5) * 17) - cameraX * 0.1) % (WIDTH + 180) + WIDTH + 180) % (WIDTH + 180) - 50;
     const cloudY = 69 + (i * 43) % 86;
     ctx.fillStyle = 'rgba(250, 255, 231, 0.42)';
     ctx.beginPath();
@@ -898,8 +1019,8 @@ function drawBackground() {
   ctx.closePath();
   ctx.fill();
 
-  for (let i = 0; i < 17; i += 1) {
-    const x = ((i * 89 - cameraX * 0.3) % (WIDTH + 120) + WIDTH + 120) % (WIDTH + 120) - 35;
+  for (let i = 0; i < 14 + (currentLevel % 8); i += 1) {
+    const x = ((i * (67 + currentLevel % 23) - cameraX * 0.3) % (WIDTH + 120) + WIDTH + 120) % (WIDTH + 120) - 35;
     const baseY = 327 + (i * 31) % 92;
     const crown = 22 + (i * 17) % 18;
     ctx.fillStyle = treeColor;
@@ -1241,7 +1362,7 @@ function drawOverlay(title, subtitle, accent) {
 function render() {
   drawWorld();
   if (won) {
-    drawOverlay(currentLevel === MAX_LEVEL ? 'YOU BEAT THE DEVIL' : 'LEVEL CLEARED!', currentLevel === MAX_LEVEL ? 'All 100 levels conquered!' : 'Press N or choose a level to continue', '#8bf2c0');
+    drawOverlay(currentLevel === MAX_LEVEL ? 'YOU BEAT GT' : 'LEVEL CLEARED!', currentLevel === MAX_LEVEL ? 'All 100 levels conquered!' : 'Press N or choose a level to continue', '#8bf2c0');
   } else if (paused) {
     drawOverlay('PAUSED', 'Press P or the pause button to resume', '#ffd274');
   }
@@ -1256,6 +1377,7 @@ function tick(timestamp) {
 }
 
 window.addEventListener('keydown', (event) => {
+  unlockAudio();
   if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'Space'].includes(event.code)) event.preventDefault();
   if (event.code === 'Escape' && stageWrap.classList.contains('is-fullscreen')) {
     stageWrap.classList.remove('is-fullscreen');
@@ -1302,50 +1424,54 @@ function togglePause() {
   setStatus(paused ? 'Take a breather. The traps can wait.' : 'Back in the danger zone.', 1.8);
 }
 
-function bindTouchControl(buttonId, control) {
-  const button = document.querySelector(`#${buttonId}`);
-  const activePointers = new Set();
+function bindTouchControls(control) {
+  for (const button of document.querySelectorAll(`[data-control="${control}"]`)) {
+    const activePointers = new Set();
+    const onPointerDown = (event) => {
+      unlockAudio();
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      event.preventDefault();
+      if (won || enteringDoor || paused) return;
+      if (aiPilot) {
+        aiPilot = false;
+        aiServerJump = false;
+        updateAIPilotButton();
+      }
+      if (control === 'jump') {
+        input.jumpQueued = true;
+        return;
+      }
+      activePointers.add(event.pointerId);
+      input[control] = true;
+    };
 
-  const onPointerDown = (event) => {
-    if (event.pointerType === 'mouse' && event.button !== 0) return;
-    event.preventDefault();
-    if (won || enteringDoor || paused) return;
-    if (aiPilot) {
-      aiPilot = false;
-      aiServerJump = false;
-      updateAIPilotButton();
-    }
-    if (control === 'jump') {
-      input.jumpQueued = true;
-      return;
-    }
-    activePointers.add(event.pointerId);
-    input[control] = true;
-  };
+    const onPointerUp = (event) => {
+      activePointers.delete(event.pointerId);
+      if (control !== 'jump' && activePointers.size === 0) input[control] = false;
+    };
 
-  const onPointerUp = (event) => {
-    activePointers.delete(event.pointerId);
-    if (control !== 'jump' && activePointers.size === 0) input[control] = false;
-  };
-
-  button.addEventListener('pointerdown', onPointerDown);
-  window.addEventListener('pointerup', onPointerUp);
-  window.addEventListener('pointercancel', onPointerUp);
+    button.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
+  }
 }
 
-bindTouchControl('moveLeftButton', 'left');
-bindTouchControl('moveRightButton', 'right');
-bindTouchControl('jumpButton', 'jump');
+bindTouchControls('left');
+bindTouchControls('right');
+bindTouchControls('jump');
 
 document.querySelector('#restartButton').addEventListener('click', () => startLevel(currentLevel));
 document.querySelector('#pauseButton').addEventListener('click', togglePause);
-document.querySelector('#aiButton').addEventListener('click', toggleAIPilot);
+document.querySelectorAll('[data-ai-toggle]').forEach((button) => {
+  button.addEventListener('click', toggleAIPilot);
+});
 musicButton.addEventListener('click', toggleLevelMusic);
 rotateButton.addEventListener('click', rotateForPhone);
 screenSizeInput.addEventListener('input', () => setScreenSize(screenSizeInput.value));
 fullscreenButton.addEventListener('click', toggleFullscreen);
 stageFullscreenButton.addEventListener('click', toggleFullscreen);
 document.addEventListener('fullscreenchange', updateFullscreenButton);
+window.addEventListener('pointerdown', unlockAudio, { passive: true });
 
 restoreScreenSize();
 const requestedLevel = Number(new URLSearchParams(window.location.search).get('level'));
