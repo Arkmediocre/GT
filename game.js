@@ -22,6 +22,7 @@ const GRAVITY = 1550;
 const JUMP_SPEED = 610;
 const MAX_SPEED = 285;
 const ACCELERATION = 1750;
+const LEVEL_ADVANCE_DELAY = 2.5;
 
 const chapters = [
   { name: 'Warm-up', range: '01–20', hue: '#8bf2c0' },
@@ -54,6 +55,7 @@ let map;
 let cameraX = 0;
 let paused = false;
 let won = false;
+let levelAdvanceAt = 0;
 let enteringDoor = false;
 let playerHidden = false;
 let aiPilot = false;
@@ -502,6 +504,7 @@ function startLevel(level) {
   cameraX = 0;
   paused = false;
   won = false;
+  levelAdvanceAt = 0;
   enteringDoor = false;
   playerHidden = false;
   document.querySelector('#leaderboardPanel').hidden = true;
@@ -636,6 +639,9 @@ function finishLevel() {
       durationMs: Math.max(1, Math.round(performance.now() - levelStartedAt)),
     },
   }));
+  if (currentLevel < MAX_LEVEL) {
+    levelAdvanceAt = performance.now() + LEVEL_ADVANCE_DELAY * 1000;
+  }
   setStatus(currentLevel === MAX_LEVEL ? 'You beat all 100 levels. GT is yours!' : 'Exit found! Get ready for the next level.', 999);
 }
 
@@ -1362,7 +1368,12 @@ function drawOverlay(title, subtitle, accent) {
 function render() {
   drawWorld();
   if (won) {
-    drawOverlay(currentLevel === MAX_LEVEL ? 'YOU BEAT GT' : 'LEVEL CLEARED!', currentLevel === MAX_LEVEL ? 'All 100 levels conquered!' : 'Press N or choose a level to continue', '#8bf2c0');
+    const nextLevelCountdown = Math.max(1, Math.ceil((levelAdvanceAt - performance.now()) / 1000));
+    drawOverlay(
+      currentLevel === MAX_LEVEL ? 'YOU BEAT GT' : 'LEVEL CLEARED!',
+      currentLevel === MAX_LEVEL ? 'All 100 levels conquered!' : `Level ${currentLevel + 1} starts in ${nextLevelCountdown}...`,
+      '#8bf2c0',
+    );
   } else if (paused) {
     drawOverlay('PAUSED', 'Press P or the pause button to resume', '#ffd274');
   }
@@ -1371,6 +1382,9 @@ function render() {
 function tick(timestamp) {
   const dt = Math.min((timestamp - lastFrame) / 1000 || 1 / 60, 1 / 30);
   lastFrame = timestamp;
+  if (won && levelAdvanceAt && timestamp >= levelAdvanceAt) {
+    startLevel(currentLevel + 1);
+  }
   if (!paused && !won) updateWorld(dt);
   render();
   requestAnimationFrame(tick);

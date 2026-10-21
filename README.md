@@ -33,6 +33,7 @@ Then visit <http://localhost:8000>.
 - Pause: `P`
 - Restart level: `R` or the restart button
 - Toggle AI auto-play: click **AI Pilot** or press `I`; press a movement key to take back control
+- After a level is cleared, the next level starts automatically after a short celebration
 - Choose an unlocked level: click **Levels** beside the game controls
 
 AI Pilot uses the Python hazard planner when the backend is running and falls

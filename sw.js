@@ -1,10 +1,10 @@
-const CACHE_NAME = 'gt-pwa-v1';
+const CACHE_NAME = 'gt-pwa-v2';
 const APP_FILES = [
   './',
   './index.html',
   './level-select.html',
   './style.css?v=8',
-  './game.js?v=11',
+  './game.js?v=12',
   './level-select.js?v=3',
   './leaderboard.js?v=6',
   './firebase-config.js',
