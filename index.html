@@ -9,7 +9,10 @@
       content="Play GT: dodge traps, collect coins, and master 100 platforming levels."
     />
     <title>GT — 100 trap-filled levels</title>
-    <link rel="stylesheet" href="style.css?v=7" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icons/gt-icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <link rel="stylesheet" href="style.css?v=8" />
   </head>
   <body>
     <main class="app">
@@ -19,6 +22,7 @@
           <span>GT</span>
         </a>
         <div class="topbar-note"><span class="live-dot"></span> 100 ways to get fooled</div>
+        <button class="install-app-button" id="installAppButton" type="button" hidden>INSTALL APP</button>
       </header>
 
       <section class="intro">
@@ -131,5 +135,6 @@
     </main>
     <script src="game.js?v=11"></script>
     <script type="module" src="leaderboard.js?v=6"></script>
+    <script src="pwa.js?v=1"></script>
   </body>
 </html>

@@ -9,7 +9,10 @@
       content="Choose from your unlocked GT platforming levels."
     />
     <title>Choose a Level — GT</title>
-    <link rel="stylesheet" href="style.css?v=7" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icons/gt-icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <link rel="stylesheet" href="style.css?v=8" />
   </head>
   <body>
     <main class="app level-select-page">
@@ -19,6 +22,7 @@
           <span>GT</span>
         </a>
         <a class="back-link" id="backToGame" href="index.html">← Back to game</a>
+        <button class="install-app-button" id="installAppButton" type="button" hidden>INSTALL APP</button>
       </header>
 
       <section class="selector-intro">
@@ -39,5 +43,6 @@
       <footer class="page-footer">MADE FOR THE BRAVE <span>·</span> NOT RESPONSIBLE FOR RAGE QUITS</footer>
     </main>
     <script src="level-select.js?v=3"></script>
+    <script src="pwa.js?v=1"></script>
   </body>
 </html>

@@ -1,6 +1,21 @@
 # GT
 
-A no-install, browser-based platform game with 100 progressively harder levels.
+A browser-based platform game with 100 progressively harder levels, installable
+as an app on desktop and mobile.
+
+## Install GT on a device
+
+Open <https://arkmediocre.github.io/GT/> in a supported browser while online.
+
+- **Windows PC:** In Chrome or Edge, select **Install GT** in the game header
+  (when shown), or use the browser's **Install this site as an app** menu.
+- **Android phone/tablet:** Open the link in Chrome, tap **Install app** if
+  offered, or use **⋮ → Install app** / **Add to Home screen**.
+- **iPhone/iPad:** Open the link in Safari, tap **Share → Add to Home Screen**.
+
+After the first visit, GT's game files are cached for offline use. Leaderboard
+scores still need an internet connection. The app is installed by the browser;
+this project cannot install it remotely onto your PC or phone.
 
 ## Play locally
 
